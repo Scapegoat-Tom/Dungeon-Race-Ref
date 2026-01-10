@@ -16,11 +16,13 @@ dungeons_path = './Resources/dungeons.json'
 if not os.path.exists(dungeons_path):
     default_dungeons = [
         {"name": "Grasp of Avarice", "hash": 4078656646},
+        {"name": "Prophecy", "hash": 1234567890},
         {"name": "Duality", "hash": 2823159265},
         {"name": "Spire of the Watcher", "hash": 1262462921},
-        {"name": "Ghosts of the Deep", "hash": 4169648179},
-        {"name": "Warlord's Ruin", "hash": 2136320021},
-        {"name": "Vesper's Host", "hash": 442508465}
+        {"name": "Ghosts of the Deep", "hash": 313828469},
+        {"name": "Warlord's Ruin", "hash": 200485507},
+        {"name": "Vesper's Host", "hash": 300092127},
+        {"name": "Equilibrium", "hash": 2727361621}
     ]
     with open(dungeons_path, 'w') as f:
         json.dump(default_dungeons, f, indent=2)
