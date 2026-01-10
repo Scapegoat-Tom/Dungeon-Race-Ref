@@ -191,7 +191,8 @@ class RaceModal(discord.ui.Modal, title="Create Race Event"):
                 start_time=start_dt,
                 end_time=end_dt,
                 entity_type=discord.EntityType.external,
-                location="Destiny 2"
+                location="Destiny 2",
+                privacy_level=discord.PrivacyLevel.guild_only
             )
         except Exception as e:
             print(f"Failed to create Discord event: {e}")
