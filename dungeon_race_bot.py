@@ -15,12 +15,14 @@ for directory in ['Resources', 'RaceEvents', 'Teams', 'Results']:
 dungeons_path = './Resources/dungeons.json'
 if not os.path.exists(dungeons_path):
     default_dungeons = [
+        {"name": "The Shattered Throne", "hash": 2032534090},
+        {"name": "Pit of Heresy", "hash": 1375089621},
+        {"name": "Prophecy", "hash": 4148187374},
         {"name": "Grasp of Avarice", "hash": 4078656646},
-        {"name": "Prophecy", "hash": 1234567890},
         {"name": "Duality", "hash": 2823159265},
         {"name": "Spire of the Watcher", "hash": 1262462921},
         {"name": "Ghosts of the Deep", "hash": 313828469},
-        {"name": "Warlord's Ruin", "hash": 200485507},
+        {"name": "Warlord's Ruin", "hash": 2004855007},
         {"name": "Vesper's Host", "hash": 300092127},
         {"name": "Equilibrium", "hash": 2727361621}
     ]
