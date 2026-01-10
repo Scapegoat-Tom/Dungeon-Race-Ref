@@ -1,0 +1,107 @@
+# requirements.txt
+discord.py>=2.3.0
+aiohttp>=3.9.0
+python-dotenv>=1.0.0
+pytz>=2023.3
+
+# ===================================
+# .env.example
+# Copy this to .env and fill in your tokens
+# ===================================
+
+# Discord Bot Token (from Discord Developer Portal)
+DISCORD_BOT_TOKEN=your_discord_bot_token_here
+
+# Bungie API Key (from https://www.bungie.net/en/Application)
+BUNGIE_API_KEY=your_bungie_api_key_here
+
+# ===================================
+# Project Structure
+# ===================================
+# 
+# dungeon-race-bot/
+# ├── main.py
+# ├── requirements.txt
+# ├── .env
+# ├── cogs/
+# │   ├── __init__.py
+# │   ├── admin_commands.py
+# │   ├── race_commands.py
+# │   └── team_commands.py
+# ├── utils/
+# │   ├── __init__.py
+# │   ├── bungie_api.py
+# │   ├── race_monitor.py
+# │   └── team_manager.py
+# ├── Resources/
+# │   └── dungeons.json
+# ├── RaceEvents/
+# │   └── [guild_id].json
+# ├── Teams/
+# │   └── [guild_id].json
+# └── Results/
+#     └── [guild_id]/
+#         └── [race_id]_[date].json
+
+# ===================================
+# Setup Instructions
+# ===================================
+# 
+# 1. Install Python 3.10 or higher
+# 
+# 2. Install dependencies:
+#    pip install -r requirements.txt
+# 
+# 3. Create a Discord Bot:
+#    - Go to https://discord.com/developers/applications
+#    - Create a new application
+#    - Go to Bot section and create a bot
+#    - Copy the token to .env
+#    - Enable these Privileged Gateway Intents:
+#      * Server Members Intent
+#      * Message Content Intent
+#    - In OAuth2 > URL Generator, select:
+#      * bot
+#      * applications.commands
+#    - Bot Permissions:
+#      * Manage Channels
+#      * Manage Events
+#      * Manage Roles
+#      * Read Messages/View Channels
+#      * Send Messages
+#      * Manage Messages
+#      * Embed Links
+#      * Read Message History
+# 
+# 4. Get Bungie API Key:
+#    - Go to https://www.bungie.net/en/Application
+#    - Create a new application
+#    - Copy the API Key to .env
+# 
+# 5. Copy .env.example to .env and fill in your tokens
+# 
+# 6. Run the bot:
+#    python main.py
+# 
+# 7. In your Discord server:
+#    - Run /setup-dungeon-race to create channels
+#    - Run /create-race-event to start a race
+# 
+# ===================================
+# Commands Overview
+# ===================================
+# 
+# Admin Commands:
+# - /setup-dungeon-race - Creates category and channels
+# - /remove-dungeon-race - Removes category and channels
+# - /create-race-event - Creates a new race event
+# - /reset-teams - Clears all teams
+# 
+# User Commands:
+# - /create-team - Create or join a team for a race
+# 
+# Team Message Buttons:
+# - Join Team - Join an existing team
+# - Leave Team - Leave your current team
+# - Edit Name - Change team name (captain only)
+# - Delete Team - Delete the team (captain only)
