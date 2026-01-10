@@ -1,11 +1,16 @@
 # main.py
 import discord
-from discord.ext import commands, tasks
 import json
 import os
-from datetime import datetime
 import asyncio
+from datetime import datetime
 from pathlib import Path
+from discord.ext import commands, tasks
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 
 # Create necessary directories
 for directory in ['Resources', 'RaceEvents', 'Teams', 'Results']:
