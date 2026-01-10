@@ -124,7 +124,7 @@ This creates:
 - Leaderboard updates automatically
 - Only fresh runs count (no checkpoints)
 - All team members must be present
-- Each player can only appear once per run
+- Each player can only appear once per run (no going to orbit or swapping character)
 
 ### After Race
 
@@ -140,7 +140,7 @@ This creates:
 | `/setup-dungeon-race` | Create race category and channels |
 | `/remove-dungeon-race` | Remove race category and channels |
 | `/create-race-event` | Start a new race event |
-| `/reset-teams` | Clear all teams (use with caution) |
+| `/reset-teams` | Clear all teams before starting new race event (use with caution) |
 
 ## Race Types
 
