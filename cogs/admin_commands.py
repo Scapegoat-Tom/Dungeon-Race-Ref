@@ -57,7 +57,10 @@ class AdminCommands(commands.Cog):
                     "**Important:**\n"
                     "• All team members must be present in the completion\n"
                     "• Fresh runs only (no checkpoints)\n"
-                    "• Each player can only be on one team per race"
+                    "• Each player can only be on one team per race\n"
+                    "• No joining from orbit or character swapping\n"
+                    "• No speed glitchs (all forms of skating), or off map travel\n"
+                    "• No game breaking exploits or other methods to bypass mechanics"
                 ),
                 color=PURPLE
             )
@@ -123,6 +126,110 @@ class AdminCommands(commands.Cog):
             await teams_channel.purge(limit=100)
         
         await interaction.followup.send("✅ All teams have been reset!", ephemeral=True)
+    @app_commands.command(name="cancel-race-event", description="Cancel an active race event")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def cancel_race_event(self, interaction: discord.Interaction):
+        events_file = f'./RaceEvents/{interaction.guild.id}.json'
+        
+        if not os.path.exists(events_file):
+            await interaction.response.send_message("❌ No race events found!", ephemeral=True)
+            return
+        
+        with open(events_file, 'r') as f:
+            events = json.load(f)
+        
+        if not events:
+            await interaction.response.send_message("❌ No race events to cancel!", ephemeral=True)
+            return
+        
+        # Create dropdown for race selection
+        options = [
+            discord.SelectOption(label=race_id, value=race_id)
+            for race_id in events.keys()
+        ]
+        
+        select = discord.ui.Select(
+            placeholder="Select a race to cancel",
+            options=options,
+            custom_id="cancel_race_select"
+        )
+        
+        async def select_callback(select_interaction: discord.Interaction):
+            selected_race = select_interaction.data['values'][0]
+            
+            await select_interaction.response.defer(ephemeral=True)
+            
+            # Load teams associated with this race
+            teams_file = f'./Teams/{interaction.guild.id}.json'
+            if os.path.exists(teams_file):
+                with open(teams_file, 'r') as f:
+                    teams = json.load(f)
+                
+                # Delete teams and their channels for this race
+                teams_to_delete = []
+                for team_name, team_data in teams.items():
+                    if team_data.get('race_id') == selected_race:
+                        teams_to_delete.append(team_name)
+                        
+                        # Delete team channels
+                        if 'text_channel_id' in team_data:
+                            text_channel = interaction.guild.get_channel(team_data['text_channel_id'])
+                            if text_channel:
+                                await text_channel.delete()
+                        
+                        if 'voice_channel_id' in team_data:
+                            voice_channel = interaction.guild.get_channel(team_data['voice_channel_id'])
+                            if voice_channel:
+                                await voice_channel.delete()
+                
+                # Remove teams from file
+                for team_name in teams_to_delete:
+                    del teams[team_name]
+                
+                with open(teams_file, 'w') as f:
+                    json.dump(teams, f, indent=2)
+            
+            # Delete Discord scheduled event
+            for event in interaction.guild.scheduled_events:
+                if event.name == selected_race:
+                    try:
+                        await event.delete()
+                    except:
+                        pass
+            
+            # Remove race from events file
+            del events[selected_race]
+            with open(events_file, 'w') as f:
+                json.dump(events, f, indent=2)
+            
+            # Delete any leaderboard messages
+            leaderboard_channel = discord.utils.get(interaction.guild.text_channels, name='leaderboard')
+            if leaderboard_channel:
+                async for message in leaderboard_channel.history(limit=50):
+                    if message.author == self.bot.user and message.embeds:
+                        if message.embeds[0].title and selected_race in message.embeds[0].title:
+                            await message.delete()
+            
+            # Delete team messages
+            teams_channel = discord.utils.get(interaction.guild.text_channels, name='teams')
+            if teams_channel:
+                async for message in teams_channel.history(limit=100):
+                    if message.author == self.bot.user and message.embeds:
+                        if message.embeds[0].description and selected_race in message.embeds[0].description:
+                            await message.delete()
+            
+            embed = discord.Embed(
+                title="🚫 Race Cancelled",
+                description=f"**{selected_race}** has been cancelled.\n\nAll associated teams and channels have been removed.",
+                color=PURPLE
+            )
+            await select_interaction.followup.send(embed=embed, ephemeral=True)
+        
+        select.callback = select_callback
+        view = discord.ui.View()
+        view.add_item(select)
+        
+        await interaction.response.send_message("Select a race event to cancel:", view=view, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(AdminCommands(bot))
