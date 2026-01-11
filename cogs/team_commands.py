@@ -190,21 +190,41 @@ class TeamView(discord.ui.View):
         self.team_name = team_name
         self.guild_id = guild_id
     
-    @discord.ui.button(label="Join Team", style=discord.ButtonStyle.green, custom_id="join_team")
+    @discord.ui.button(label="Join Team", style=discord.ButtonStyle.green, custom_id="join_team_btn")
     async def join_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_join(interaction)
+        try:
+            await self.handle_join(interaction)
+        except Exception as e:
+            print(f"Error in join button: {e}")
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
     
-    @discord.ui.button(label="Leave Team", style=discord.ButtonStyle.red, custom_id="leave_team")
+    @discord.ui.button(label="Leave Team", style=discord.ButtonStyle.red, custom_id="leave_team_btn")
     async def leave_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_leave(interaction)
+        try:
+            await self.handle_leave(interaction)
+        except Exception as e:
+            print(f"Error in leave button: {e}")
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
     
-    @discord.ui.button(label="Edit Name", style=discord.ButtonStyle.blurple, custom_id="edit_team")
+    @discord.ui.button(label="Edit Name", style=discord.ButtonStyle.blurple, custom_id="edit_team_btn")
     async def edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_edit(interaction)
+        try:
+            await self.handle_edit(interaction)
+        except Exception as e:
+            print(f"Error in edit button: {e}")
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
     
-    @discord.ui.button(label="Delete Team", style=discord.ButtonStyle.danger, custom_id="delete_team")
+    @discord.ui.button(label="Delete Team", style=discord.ButtonStyle.danger, custom_id="delete_team_btn")
     async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_delete(interaction)
+        try:
+            await self.handle_delete(interaction)
+        except Exception as e:
+            print(f"Error in delete button: {e}")
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
     
     async def handle_join(self, interaction: discord.Interaction):
         teams_file = f'./Teams/{self.guild_id}.json'
