@@ -227,7 +227,12 @@ class TeamView(discord.ui.View):
                 await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
     
     async def handle_join(self, interaction: discord.Interaction):
-        teams_file = f'./Teams/{self.guild_id}.json'
+        teams_file = f'./Teams/{interaction.guild.id}.json'
+        
+        if not os.path.exists(teams_file):
+            await interaction.response.send_message("❌ Teams file not found!", ephemeral=True)
+            return
+            
         with open(teams_file, 'r') as f:
             teams = json.load(f)
         
@@ -291,7 +296,12 @@ class TeamView(discord.ui.View):
         await interaction.response.send_message("✅ Joined team!", ephemeral=True)
     
     async def handle_leave(self, interaction: discord.Interaction):
-        teams_file = f'./Teams/{self.guild_id}.json'
+        teams_file = f'./Teams/{interaction.guild.id}.json'
+        
+        if not os.path.exists(teams_file):
+            await interaction.response.send_message("❌ Teams file not found!", ephemeral=True)
+            return
+            
         with open(teams_file, 'r') as f:
             teams = json.load(f)
         
@@ -361,7 +371,12 @@ class TeamView(discord.ui.View):
         await interaction.response.send_message("✅ Left team!", ephemeral=True)
     
     async def handle_edit(self, interaction: discord.Interaction):
-        teams_file = f'./Teams/{self.guild_id}.json'
+        teams_file = f'./Teams/{interaction.guild.id}.json'
+        
+        if not os.path.exists(teams_file):
+            await interaction.response.send_message("❌ Teams file not found!", ephemeral=True)
+            return
+            
         with open(teams_file, 'r') as f:
             teams = json.load(f)
         
@@ -375,11 +390,16 @@ class TeamView(discord.ui.View):
             await interaction.response.send_message("❌ Only the team captain can edit the team name!", ephemeral=True)
             return
         
-        modal = EditTeamModal(self.team_name, self.guild_id)
+        modal = EditTeamModal(self.team_name, interaction.guild.id)
         await interaction.response.send_modal(modal)
     
     async def handle_delete(self, interaction: discord.Interaction):
-        teams_file = f'./Teams/{self.guild_id}.json'
+        teams_file = f'./Teams/{interaction.guild.id}.json'
+        
+        if not os.path.exists(teams_file):
+            await interaction.response.send_message("❌ Teams file not found!", ephemeral=True)
+            return
+            
         with open(teams_file, 'r') as f:
             teams = json.load(f)
         
