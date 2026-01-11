@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+api_key = os.getenv('BUNGIE_API_KEY')
 
 # Create necessary directories
 for directory in ['Resources', 'RaceEvents', 'Teams', 'Results']:
@@ -63,6 +64,18 @@ async def on_ready():
     # Reinitialize team messages
     for guild in bot.guilds:
         await reinitialize_team_messages(guild)
+        print(f'Reinitialized team messages for {guild.name}')
+
+# Add interaction handler for buttons
+@bot.event
+async def on_interaction(interaction: discord.Interaction):
+    """Handle all interactions including buttons"""
+    try:
+        # Let the bot's default handler process it
+        if interaction.type == discord.InteractionType.component:
+            print(f"Button interaction: {interaction.data.get('custom_id')} by {interaction.user}")
+    except Exception as e:
+        print(f"Error in interaction handler: {e}")
 
 @tasks.loop(hours=1)
 async def race_monitor():
@@ -78,14 +91,17 @@ async def before_race_monitor():
 
 async def reinitialize_team_messages(guild):
     """Reinitialize team message buttons after bot restart"""
-    from utils.team_manager import setup_team_message_view
+    from cogs.team_commands import TeamView
     
     teams_file = f'./Teams/{guild.id}.json'
     if not os.path.exists(teams_file):
         return
     
-    with open(teams_file, 'r') as f:
-        teams_data = json.load(f)
+    try:
+        with open(teams_file, 'r') as f:
+            teams_data = json.load(f)
+    except:
+        return
     
     # Find teams channel
     teams_channel = discord.utils.get(guild.text_channels, name='teams')
@@ -94,13 +110,20 @@ async def reinitialize_team_messages(guild):
     
     # Recreate views for existing team messages
     for team_name, team_data in teams_data.items():
-        if 'message_id' in team_data:
-            try:
-                message = await teams_channel.fetch_message(team_data['message_id'])
-                view = setup_team_message_view(team_name, guild.id)
-                await message.edit(view=view)
-            except discord.NotFound:
-                pass
+        if 'message_id' not in team_data:
+            continue
+            
+        try:
+            message = await teams_channel.fetch_message(team_data['message_id'])
+            view = TeamView(team_name, guild.id)
+            
+            # Re-attach the view to the message
+            await message.edit(view=view)
+            print(f"  ✓ Reinitialized view for team: {team_name}")
+        except discord.NotFound:
+            print(f"  ✗ Message not found for team: {team_name}")
+        except Exception as e:
+            print(f"  ✗ Error reinitializing team {team_name}: {e}")
 
 # Load cogs (command modules)
 async def load_cogs():
