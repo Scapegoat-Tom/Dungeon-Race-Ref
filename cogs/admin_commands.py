@@ -54,13 +54,13 @@ class AdminCommands(commands.Cog):
                     "**Race Types:**\n"
                     "• **Best Time**: Your single fastest run counts\n"
                     "• **Average**: Average of your three best runs\n\n"
-                    "**Important:**\n"
+                    "**Rules:**\n"
                     "• All team members must be present in the completion\n"
                     "• Fresh runs only (no checkpoints)\n"
                     "• Each player can only be on one team per race\n"
                     "• No joining from orbit or character swapping\n"
-                    "• No speed glitchs (all forms of skating), or off map travel\n"
-                    "• No game breaking exploits or other methods to bypass mechanics"
+                    "• No speed glitchs (skating), or off map travel\n"
+                    "• No game exploits or other methods to bypass mechanics"
                 ),
                 color=PURPLE
             )
