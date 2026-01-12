@@ -227,148 +227,212 @@ class TeamView(discord.ui.View):
                 await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
     
     async def handle_join(self, interaction: discord.Interaction):
-        teams_file = f'./Teams/{interaction.guild.id}.json'
-        
-        if not os.path.exists(teams_file):
-            await interaction.response.send_message("❌ Teams file not found!", ephemeral=True)
-            return
+        try:
+            # DEFER IMMEDIATELY - interactions must be responded to within 3 seconds
+            await interaction.response.defer(ephemeral=True)
             
-        with open(teams_file, 'r') as f:
-            teams = json.load(f)
-        
-        team_data = teams.get(self.team_name)
-        if not team_data:
-            await interaction.response.send_message("❌ Team not found!", ephemeral=True)
-            return
-        
-        # Check if team is full
-        if len(team_data['members']) >= 3:
-            await interaction.response.send_message("❌ Team is full (max 3 players)!", ephemeral=True)
-            return
-        
-        # Check if user is already on this team
-        user_name = interaction.user.display_name
-        if user_name in team_data['members']:
-            await interaction.response.send_message("❌ You're already on this team!", ephemeral=True)
-            return
-        
-        # Check if user is on another team for this race
-        race_id = team_data['race_id']
-        for other_team_name, other_team_data in teams.items():
-            if other_team_data.get('race_id') == race_id and user_name in other_team_data.get('members', []):
-                await interaction.response.send_message(
-                    f"❌ You're already on team '{other_team_name}' for this race!",
-                    ephemeral=True
-                )
+            teams_file = f'./Teams/{interaction.guild.id}.json'
+            
+            if not os.path.exists(teams_file):
+                await interaction.followup.send("❌ Teams file not found!", ephemeral=True)
                 return
-        
-        # Add user to team
-        team_data['members'].append(user_name)
-        
-        # Update channel permissions
-        text_channel = interaction.guild.get_channel(team_data['text_channel_id'])
-        voice_channel = interaction.guild.get_channel(team_data['voice_channel_id'])
-        
-        if text_channel:
-            await text_channel.set_permissions(interaction.user, read_messages=True, send_messages=True)
-        if voice_channel:
-            await voice_channel.set_permissions(interaction.user, connect=True, speak=True)
-        
-        # Save and update message
-        teams[self.team_name] = team_data
-        with open(teams_file, 'w') as f:
-            json.dump(teams, f, indent=2)
-        
-        # Update embed
-        captain = interaction.guild.get_member(team_data['captain_id'])
-        embed = discord.Embed(
-            title=f"🏁 {self.team_name}",
-            description=(
-                f"**Race:** {team_data['race_id']}\n"
-                f"**Captain:** {captain.mention if captain else team_data['captain']}\n"
-                f"**Members:**\n"
-                + "\n".join([f"• {m}" for m in team_data['members']])
-            ),
-            color=PURPLE
-        )
-        
-        await interaction.message.edit(embed=embed)
-        await interaction.response.send_message("✅ Joined team!", ephemeral=True)
+                
+            with open(teams_file, 'r') as f:
+                teams = json.load(f)
+            
+            team_data = teams.get(self.team_name)
+            if not team_data:
+                await interaction.followup.send("❌ Team not found!", ephemeral=True)
+                return
+            
+            # Check if team is full
+            if len(team_data['members']) >= 3:
+                await interaction.followup.send("❌ Team is full (max 3 players)!", ephemeral=True)
+                return
+            
+            # Check if user is already on this team
+            user_name = interaction.user.display_name
+            if user_name in team_data['members']:
+                await interaction.followup.send("❌ You're already on this team!", ephemeral=True)
+                return
+            
+            # Check if user is on another team for this race
+            race_id = team_data['race_id']
+            for other_team_name, other_team_data in teams.items():
+                if other_team_data.get('race_id') == race_id and user_name in other_team_data.get('members', []):
+                    await interaction.followup.send(
+                        f"❌ You're already on team '{other_team_name}' for this race!",
+                        ephemeral=True
+                    )
+                    return
+            
+            # Add user to team FIRST (before trying to set permissions)
+            team_data['members'].append(user_name)
+            
+            # Update channel permissions (with better error handling)
+            text_channel = interaction.guild.get_channel(team_data.get('text_channel_id'))
+            voice_channel = interaction.guild.get_channel(team_data.get('voice_channel_id'))
+            
+            if text_channel:
+                try:
+                    await text_channel.set_permissions(
+                        interaction.user, 
+                        read_messages=True, 
+                        send_messages=True,
+                        view_channel=True
+                    )
+                    print(f"✓ Set text channel permissions for {interaction.user}")
+                except discord.Forbidden as e:
+                    print(f"✗ Failed to set text channel permissions: {e}")
+                except Exception as e:
+                    print(f"✗ Error setting text channel permissions: {e}")
+            
+            if voice_channel:
+                try:
+                    await voice_channel.set_permissions(
+                        interaction.user, 
+                        connect=True, 
+                        speak=True,
+                        view_channel=True
+                    )
+                    print(f"✓ Set voice channel permissions for {interaction.user}")
+                except discord.Forbidden as e:
+                    print(f"✗ Failed to set voice channel permissions: {e}")
+                    # Don't fail the whole operation if voice permissions fail
+                except Exception as e:
+                    print(f"✗ Error setting voice channel permissions: {e}")
+            
+            # Save and update message
+            teams[self.team_name] = team_data
+            with open(teams_file, 'w') as f:
+                json.dump(teams, f, indent=2)
+            
+            # Update embed
+            captain = interaction.guild.get_member(team_data['captain_id'])
+            embed = discord.Embed(
+                title=f"🏁 {self.team_name}",
+                description=(
+                    f"**Race:** {team_data['race_id']}\n"
+                    f"**Captain:** {captain.mention if captain else team_data['captain']}\n"
+                    f"**Members:**\n"
+                    + "\n".join([f"• {m}" for m in team_data['members']])
+                ),
+                color=PURPLE
+            )
+            
+            await interaction.message.edit(embed=embed)
+            await interaction.followup.send("✅ Joined team!", ephemeral=True)
+            
+        except Exception as e:
+            print(f"Unexpected error in handle_join: {e}")
+            import traceback
+            traceback.print_exc()
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
+            else:
+                try:
+                    await interaction.followup.send(f"❌ Error: {str(e)}", ephemeral=True)
+                except:
+                    pass
     
     async def handle_leave(self, interaction: discord.Interaction):
-        teams_file = f'./Teams/{interaction.guild.id}.json'
-        
-        if not os.path.exists(teams_file):
-            await interaction.response.send_message("❌ Teams file not found!", ephemeral=True)
-            return
+        try:
+            # DEFER IMMEDIATELY
+            await interaction.response.defer(ephemeral=True)
             
-        with open(teams_file, 'r') as f:
-            teams = json.load(f)
-        
-        team_data = teams.get(self.team_name)
-        if not team_data:
-            await interaction.response.send_message("❌ Team not found!", ephemeral=True)
-            return
-        
-        user_name = interaction.user.display_name
-        if user_name not in team_data['members']:
-            await interaction.response.send_message("❌ You're not on this team!", ephemeral=True)
-            return
-        
-        # Remove user from team
-        team_data['members'].remove(user_name)
-        
-        # Remove channel permissions
-        text_channel = interaction.guild.get_channel(team_data['text_channel_id'])
-        voice_channel = interaction.guild.get_channel(team_data['voice_channel_id'])
-        
-        if text_channel:
-            await text_channel.set_permissions(interaction.user, overwrite=None)
-        if voice_channel:
-            await voice_channel.set_permissions(interaction.user, overwrite=None)
-        
-        # If captain left, promote next member or delete team
-        if interaction.user.id == team_data['captain_id']:
-            if len(team_data['members']) > 0:
-                # Find new captain
-                new_captain_name = team_data['members'][0]
-                new_captain = discord.utils.get(interaction.guild.members, display_name=new_captain_name)
-                if new_captain:
-                    team_data['captain'] = new_captain.display_name
-                    team_data['captain_id'] = new_captain.id
-            else:
-                # Delete team if empty
-                if text_channel:
-                    await text_channel.delete()
-                if voice_channel:
-                    await voice_channel.delete()
-                await interaction.message.delete()
-                del teams[self.team_name]
-                with open(teams_file, 'w') as f:
-                    json.dump(teams, f, indent=2)
-                await interaction.response.send_message("✅ Left team! Team deleted (was empty).", ephemeral=True)
+            teams_file = f'./Teams/{interaction.guild.id}.json'
+            
+            if not os.path.exists(teams_file):
+                await interaction.followup.send("❌ Teams file not found!", ephemeral=True)
                 return
-        
-        # Save and update
-        teams[self.team_name] = team_data
-        with open(teams_file, 'w') as f:
-            json.dump(teams, f, indent=2)
-        
-        # Update embed
-        captain = interaction.guild.get_member(team_data['captain_id'])
-        embed = discord.Embed(
-            title=f"🏁 {self.team_name}",
-            description=(
-                f"**Race:** {team_data['race_id']}\n"
-                f"**Captain:** {captain.mention if captain else team_data['captain']}\n"
-                f"**Members:**\n"
-                + "\n".join([f"• {m}" for m in team_data['members']])
-            ),
-            color=PURPLE
-        )
-        
-        await interaction.message.edit(embed=embed)
-        await interaction.response.send_message("✅ Left team!", ephemeral=True)
+                
+            with open(teams_file, 'r') as f:
+                teams = json.load(f)
+            
+            team_data = teams.get(self.team_name)
+            if not team_data:
+                await interaction.followup.send("❌ Team not found!", ephemeral=True)
+                return
+            
+            user_name = interaction.user.display_name
+            if user_name not in team_data['members']:
+                await interaction.followup.send("❌ You're not on this team!", ephemeral=True)
+                return
+            
+            # Remove user from team
+            team_data['members'].remove(user_name)
+            
+            # Remove channel permissions
+            text_channel = interaction.guild.get_channel(team_data.get('text_channel_id'))
+            voice_channel = interaction.guild.get_channel(team_data.get('voice_channel_id'))
+            
+            if text_channel:
+                try:
+                    await text_channel.set_permissions(interaction.user, overwrite=None)
+                except Exception as e:
+                    print(f"✗ Error removing text channel permissions: {e}")
+                    
+            if voice_channel:
+                try:
+                    await voice_channel.set_permissions(interaction.user, overwrite=None)
+                except Exception as e:
+                    print(f"✗ Error removing voice channel permissions: {e}")
+            
+            # If captain left, promote next member or delete team
+            if interaction.user.id == team_data['captain_id']:
+                if len(team_data['members']) > 0:
+                    # Find new captain
+                    new_captain_name = team_data['members'][0]
+                    new_captain = discord.utils.get(interaction.guild.members, display_name=new_captain_name)
+                    if new_captain:
+                        team_data['captain'] = new_captain.display_name
+                        team_data['captain_id'] = new_captain.id
+                else:
+                    # Delete team if empty
+                    try:
+                        if text_channel:
+                            await text_channel.delete()
+                        if voice_channel:
+                            await voice_channel.delete()
+                        await interaction.message.delete()
+                    except Exception as e:
+                        print(f"✗ Error deleting channels: {e}")
+                        
+                    del teams[self.team_name]
+                    with open(teams_file, 'w') as f:
+                        json.dump(teams, f, indent=2)
+                    await interaction.followup.send("✅ Left team! Team deleted (was empty).", ephemeral=True)
+                    return
+            
+            # Save and update
+            teams[self.team_name] = team_data
+            with open(teams_file, 'w') as f:
+                json.dump(teams, f, indent=2)
+            
+            # Update embed
+            captain = interaction.guild.get_member(team_data['captain_id'])
+            embed = discord.Embed(
+                title=f"🏁 {self.team_name}",
+                description=(
+                    f"**Race:** {team_data['race_id']}\n"
+                    f"**Captain:** {captain.mention if captain else team_data['captain']}\n"
+                    f"**Members:**\n"
+                    + "\n".join([f"• {m}" for m in team_data['members']])
+                ),
+                color=PURPLE
+            )
+            
+            await interaction.message.edit(embed=embed)
+            await interaction.followup.send("✅ Left team!", ephemeral=True)
+            
+        except Exception as e:
+            print(f"Unexpected error in handle_leave: {e}")
+            import traceback
+            traceback.print_exc()
+            try:
+                await interaction.followup.send(f"❌ Error: {str(e)}", ephemeral=True)
+            except:
+                pass
     
     async def handle_edit(self, interaction: discord.Interaction):
         teams_file = f'./Teams/{interaction.guild.id}.json'
