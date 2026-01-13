@@ -23,7 +23,7 @@ if not os.path.exists(dungeons_path):
     default_dungeons = [
         {"name": "The Shattered Throne", "hash": 2032534090},
         {"name": "Pit of Heresy", "hash": 1375089621},
-        {"name": "Prophecy", "hash": 4148187374},
+        {"name": "Prophecy", "hash": 1077850348},
         {"name": "Grasp of Avarice", "hash": 4078656646},
         {"name": "Duality", "hash": 2823159265},
         {"name": "Spire of the Watcher", "hash": 1262462921},
