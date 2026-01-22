@@ -132,7 +132,11 @@ class TeamModal(discord.ui.Modal, title="Create Team"):
         # Create text channel
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            self.captain: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+            self.captain: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+            guild.me: discord.PermissionOverwrite(
+                manage_channels=True,
+                view_channel=True,
+            )
         }
         
         text_channel = await guild.create_text_channel(
