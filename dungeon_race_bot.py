@@ -57,14 +57,14 @@ async def on_ready():
     except Exception as e:
         print(f'Failed to sync commands: {e}')
     
-    # Start monitoring task
-    if not race_monitor.is_running():
-        race_monitor.start()
-    
     # Reinitialize team messages
     for guild in bot.guilds:
         await reinitialize_team_messages(guild)
         print(f'Reinitialized team messages for {guild.name}')
+        
+    # Start monitoring task
+    if not race_monitor.is_running():
+        race_monitor.start()
 
 # Add interaction handler for buttons
 @bot.event
@@ -78,12 +78,13 @@ async def on_interaction(interaction: discord.Interaction):
         print(f"Error in interaction handler: {e}")
 
 @tasks.loop(hours=1)
-async def race_monitor():
+async def race_monitor(): 
     """Monitor active races and update leaderboards"""
     from utils.race_monitor import check_race_completions
     
     for guild in bot.guilds:
         await check_race_completions(bot, guild)
+        print(f'Next Result check in 1 Hour') 
 
 @race_monitor.before_loop
 async def before_race_monitor():
@@ -101,7 +102,7 @@ async def reinitialize_team_messages(guild):
         with open(teams_file, 'r') as f:
             teams_data = json.load(f)
     except:
-        return
+        return 
     
     # Find teams channel
     teams_channel = discord.utils.get(guild.text_channels, name='teams')
