@@ -18,6 +18,7 @@ A Discord bot for organizing and tracking competitive Destiny 2 dungeon races wi
 - Python 3.10 or higher
 - Discord Bot with proper permissions
 - Bungie API Key
+- Charlemagne Discord bot with "Warmind AutoNick" enabled [https://warmind.io](https://warmind.io/)
 
 ### Installation
 
@@ -221,7 +222,7 @@ dungeon-race-bot/
 - Ensure Bungie names include code (#1234)
 
 ### Teams not tracking completions
-- Verify team members use exact Bungie names
+- Verify Warmind AutoNick is enabled and server members are regstered with [https://warmind.io](https://warmind.io/). Bungie names must be the same as their server name, for example 'PlayerName#1234'.
 - Check race has started
 - Wait for hourly check (or restart bot)
 
